@@ -5,8 +5,11 @@
 *   getShortUrl:
 *
 * */
-var longToShort = {};
-var shortToLong = {};
+//var longToShort = {};
+//var shortToLong = {};
+var UrlModel = require('../models/urModels');
+
+
 var encode = []; //["a", .... "z", "A"....."Z, "0"....."9"]
 
 var genCharArray = function (charA, charZ) {
@@ -20,23 +23,44 @@ encode = encode.concat(genCharArray("a", "z"));
 encode = encode.concat(genCharArray("A", "Z"));
 encode = encode.concat(genCharArray("0", "9"));
 
-var getShortUrl = function (longUrl) {
-        if (longToShort[longUrl] != null) {
-            return longToShort[longUrl];
-        } else {
-            var shortUrl = generateShortUrl(longUrl);
-            longToShort[longUrl] = shortUrl;
-            shortToLong[shortUrl] = longUrl;
-            return shortUrl;
-        }
+var getShortUrl = function (longUrl, callback) {
+        UrlModel.findOne({longUrl: longUrl}, function (err, url) {
+           if (url) {
+               callback(url);
+           } else {
+               generateShortUrl(function (shortUrl) {
+                   var url = new UrlModel({shortUrl : shortUrl, longUrl:longUrl});
+                   url.save();
+                   callback(url);
+               });
+           }
+        });
+
+        // if (longToShort[longUrl] != null) {
+        //     return longToShort[longUrl];
+        // } else {
+        //     var shortUrl = generateShortUrl(longUrl);
+        //     longToShort[longUrl] = shortUrl;
+        //     shortToLong[shortUrl] = longUrl;
+        //     return shortUrl;
+        // }
 };
-var generateShortUrl = function (longUrl) {
+// var generateShortUrl = function (longUrl) {
+//     //return Object.keys(longToShort).length;
+//     return converTo62(Object.keys(longToShort).length);
+// }
+var generateShortUrl = function (callback) {
     //return Object.keys(longToShort).length;
-    return converTo62(Object.keys(longToShort).length);
-}
-var getLongUrl = function (shortUrl) {
-    return shortToLong[shortUrl];
-}
+    UrlModel.count({}, function (err, length) {
+        callback(converTo62(length));
+    });
+};
+var getLongUrl = function (shortUrl, callback) {
+    UrlModel.findOne({shortUrl : shortUrl}, function (err, url) {
+        callback(url);
+    });
+    //return shortToLong[shortUrl];
+};
 var converTo62 = function (num) {
     var result = "";
     do {
@@ -44,7 +68,7 @@ var converTo62 = function (num) {
         num = Math.floor(num / 62);
     } while (num);
     return result;
-}
+};
 module.exports = {
     getShortUrl: getShortUrl,
     getLongUrl: getLongUrl

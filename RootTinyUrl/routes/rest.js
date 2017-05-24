@@ -12,10 +12,13 @@ router.post("/urls", jsonParser, function (req, res) {
     if (longUrl.indexOf("http") === -1) {
         longUrl = "http://" + longUrl;
     }
-    var shortUrl = urlService.getShortUrl(longUrl);
-    res.json({
-       shortUrl: shortUrl,
-       longUrl: longUrl
+    // var shortUrl = urlService.getShortUrl(longUrl);
+    // res.json({
+    //    shortUrl: shortUrl,
+    //    longUrl: longUrl
+    // });
+    urlService.getShortUrl(longUrl, function (url) {
+        res.json(url);
     });
     //console.log(req. body.longUrl);
 });
